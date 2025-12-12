@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  wedding-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MASTER_DB_NAME=master_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_EXP_HOURS=3
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /app/app
+        - action: sync
+          path: ./requirements.txt
+          target: /app/requirements.txt
+    networks:
+      - wedding-network
+
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+      - MONGO_INITDB_DATABASE=master_db
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - wedding-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  wedding-network:
+    driver: bridge
