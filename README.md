@@ -606,47 +606,157 @@ curl -X POST "http://localhost:8000/admin/login" \
 
 ## 🚀 Deployment
 
-### Docker Deployment
+Your application is ready for deployment on multiple cloud platforms. Here are several deployment options:
 
-1. **Create Dockerfile**
-```dockerfile
-FROM python:3.14-slim
+### Option 1: Railway (Recommended - Easiest)
 
-WORKDIR /app
+**Railway** provides free tier and automatic deployments from GitHub.
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+1. **Connect Repository:**
+   - Go to [Railway.app](https://railway.app)
+   - Sign up/Login with GitHub
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select your `wedding-company-backend` repository
 
-COPY . .
+2. **Add MongoDB:**
+   - In Railway dashboard, add a MongoDB plugin
+   - Copy the connection string
 
-EXPOSE 8000
+3. **Set Environment Variables:**
+   ```
+   MONGO_URI=your_railway_mongodb_url
+   MASTER_DB_NAME=master_db
+   JWT_SECRET=your-super-secret-jwt-key
+   JWT_ALGORITHM=HS256
+   JWT_EXP_HOURS=3
+   ```
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+4. **Deploy:**
+   - Railway will automatically detect and deploy your FastAPI app
+   - Get your deployment URL (e.g., `https://wedding-company-backend.up.railway.app`)
+
+### Option 2: Render
+
+**Render** offers free tier with generous limits.
+
+1. **Connect Repository:**
+   - Go to [Render.com](https://render.com)
+   - Sign up/Login
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+
+2. **Configure Service:**
+   - **Runtime:** Python 3
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+3. **Add Environment Variables:**
+   ```
+   MONGO_URI=your_mongodb_atlas_connection_string
+   MASTER_DB_NAME=master_db
+   JWT_SECRET=your-super-secret-jwt-key
+   JWT_ALGORITHM=HS256
+   JWT_EXP_HOURS=3
+   ```
+
+4. **Deploy:**
+   - Render will build and deploy automatically
+   - Get your deployment URL
+
+### Option 3: Heroku
+
+1. **Install Heroku CLI:**
+   ```bash
+   # Download from https://devcenter.heroku.com/articles/heroku-cli
+   ```
+
+2. **Login and Create App:**
+   ```bash
+   heroku login
+   heroku create wedding-company-backend
+   ```
+
+3. **Add MongoDB:**
+   ```bash
+   heroku addons:create mongolab:sandbox
+   ```
+
+4. **Set Environment Variables:**
+   ```bash
+   heroku config:set JWT_SECRET=your-super-secret-jwt-key
+   heroku config:set MASTER_DB_NAME=master_db
+   heroku config:set JWT_ALGORITHM=HS256
+   heroku config:set JWT_EXP_HOURS=3
+   ```
+
+5. **Deploy:**
+   ```bash
+   git push heroku master
+   ```
+
+### Database Setup (MongoDB Atlas - Free)
+
+1. **Create MongoDB Atlas Account:**
+   - Go to [MongoDB Atlas](https://www.mongodb.com/atlas)
+   - Create free cluster
+
+2. **Get Connection String:**
+   - Go to "Connect" → "Connect your application"
+   - Copy the connection string
+   - Replace `<password>` with your database user password
+
+3. **Whitelist IP Addresses:**
+   - Add `0.0.0.0/0` for development (restrict in production)
+
+### Environment Variables for Production
+
+```env
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+MASTER_DB_NAME=master_db
+JWT_SECRET=your-production-secret-key-minimum-32-characters
+JWT_ALGORITHM=HS256
+JWT_EXP_HOURS=24
 ```
 
-2. **Create docker-compose.yml**
-```yaml
-version: '3.8'
+### Testing Your Deployment
 
-services:
-  app:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017
-    depends_on:
-      - mongodb
+Once deployed, test these endpoints:
 
-  mongodb:
-    image: mongo:7.0
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
+```bash
+# Health check
+curl https://your-deployment-url/health
 
-volumes:
-  mongodb_data:
+# API docs
+# Visit: https://your-deployment-url/docs
+
+# Create organization
+curl -X POST "https://your-deployment-url/org/create" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "organization_name": "TestOrg",
+    "email": "admin@test.com",
+    "password": "password123"
+  }'
+```
+
+### Deployment Files Included
+
+- **`Procfile`**: Heroku deployment configuration
+- **`railway.json`**: Railway deployment configuration
+- **`render.yaml`**: Render deployment configuration
+- **`Dockerfile`**: Docker containerization
+- **`docker-compose.yml`**: Local development with Docker
+
+### Cost Comparison
+
+| Platform | Free Tier | Paid Plan |
+|----------|-----------|-----------|
+| **Railway** | 512MB RAM, $5/month | $5/month for 1GB RAM |
+| **Render** | 750 hours/month | $7/month for 1GB RAM |
+| **Heroku** | 550 hours/month | $7/month for 1GB RAM |
+| **MongoDB Atlas** | 512MB free | $9/month for 2GB |
+
+**Recommendation:** Start with **Railway** for the easiest deployment experience!
 ```
 
 3. **Deploy**

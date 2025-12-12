@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: wedding-company-api
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URI
+        value: YOUR_MONGODB_ATLAS_CONNECTION_STRING
+      - key: MASTER_DB_NAME
+        value: master_db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXP_HOURS
+        value: 3
